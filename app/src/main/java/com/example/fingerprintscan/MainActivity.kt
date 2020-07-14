@@ -13,10 +13,18 @@ import android.os.CancellationSignal
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
+import com.andrognito.pinlockview.IndicatorDots
+import com.andrognito.pinlockview.PinLockView
+import com.andrognito.pinlockview.PinLockListener
+
+
+
+
 
 class MainActivity : AppCompatActivity() {
-
+    private val defaultPin: String = "123456"
     private var cancellationSignal: CancellationSignal? = null
     private val authenticationCallback: BiometricPrompt.AuthenticationCallback
         get() = @RequiresApi(Build.VERSION_CODES.P)
@@ -37,6 +45,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        pin_lock_view.attachIndicatorDots(indicator_dots)
+        pin_lock_view.setPinLockListener(mPinLockListener)
+
+        pin_lock_view.pinLength = 6
+        pin_lock_view.textColor = ContextCompat.getColor(this, R.color.white)
+//        val numbers: IntArray = intArrayOf(1, 2, 3, 4, 5,6)
+//        pin_lock_view.customKeySet = numbers
+//        pin_lock_view.enableLayoutShuffling();
+        indicator_dots.setIndicatorType(IndicatorDots.IndicatorType.FILL_WITH_ANIMATION)
         checkBiometricSupport()
         btn_auth.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -90,5 +107,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun userNotify(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    }
+    private val mPinLockListener = object : PinLockListener {
+        override fun onComplete(pin: String) {
+            if(defaultPin.equals(pin)){
+                userNotify("Authentication Success")
+                startActivity(Intent(this@MainActivity, SecretActivity::class.java))
+            }else {
+                userNotify("incorrect pin or passkey!")
+            }
+        }
+
+        override fun onEmpty() {
+        }
+
+        override fun onPinChange(pinLength: Int, intermediatePin: String) {
+
+        }
+
     }
 }
